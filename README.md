@@ -1,4 +1,4 @@
-# vue2-boilerplate
+# Carousel-Swiper
 
 ## Project setup
 
