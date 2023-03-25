@@ -1,5 +1,5 @@
 <template>
-  <div class="home" :style="{ backgroundColor: rgbToString }">
+  <div class="home" :style="{ backgroundColor: currentColor }">
     <div :class="SWIPER_CONTAINER" ref="swiperContainer">
       <div class="swiper-wrapper">
         <div class="swiper-slide" v-for="(src, index) in imgsSrc" :key="src">
@@ -56,6 +56,8 @@ export default {
       SWIPER_CONTAINER,
       colors: Array.from({ length: imgsSrc.length }),
       swiper: null,
+      isColorsReady: false,
+      currentColor: 'rgb(0,0,0)',
     }
   },
   mounted() {
@@ -64,26 +66,26 @@ export default {
   destroyed() {
     this.destroy()
   },
-  computed: {
-    rgbToString() {
-      const defaultColor = [0, 0, 0]
-      if (!this.swiper) {
-        return defaultColor
-      }
-      const rgb =
-        this.colors[this.swiper.activeIndex % this.colors.length]?.map(
-          (c) => c * 0.6
-        ) || defaultColor
-      return `rgb(${rgb.join(',')})`
+  watch: {
+    'swiper.activeIndex': {
+      handler(index) {
+        if (!this.isColorsReady) {
+          return
+        }
+        this.setColor(index)
+      },
+      immediate: true,
     },
   },
   methods: {
     loadImage(index) {
-      this.$set(
-        this.colors,
-        index,
-        this.colorThief.getColor(this.$refs.imgs[index])
-      )
+      this.colors[index] = this.colorThief.getColor(this.$refs.imgs[index])
+      if (index % this.colors.length === 0) {
+        this.setColor(0)
+      }
+      if (this.colors.every((color) => !!color)) {
+        this.isColorsReady = true
+      }
     },
     init() {
       if (!this.colorThief) {
@@ -96,6 +98,12 @@ export default {
     },
     destroy() {
       this.colorThief = this.swiper = null
+    },
+    setColor(index) {
+      const rgb = this.colors[index % this.colors.length]
+        ?.map((c) => c * 0.6)
+        .join(',')
+      this.currentColor = `rgb(${rgb})`
     },
   },
 }
