@@ -50,7 +50,7 @@ const swiperConfig = {
 
 export default {
   name: 'HomePage',
-  data() {
+  data () {
     return {
       imgsSrc,
       SWIPER_CONTAINER,
@@ -60,15 +60,15 @@ export default {
       currentColor: 'rgb(0,0,0)',
     }
   },
-  mounted() {
+  mounted () {
     this.init()
   },
-  destroyed() {
+  destroyed () {
     this.destroy()
   },
   watch: {
     'swiper.activeIndex': {
-      handler(index) {
+      handler (index) {
         if (!this.isColorsReady) {
           return
         }
@@ -78,7 +78,7 @@ export default {
     },
   },
   methods: {
-    loadImage(index) {
+    loadImage (index) {
       this.colors[index] = this.colorThief.getColor(this.$refs.imgs[index])
       if (index % this.colors.length === 0) {
         this.setColor(0)
@@ -87,7 +87,7 @@ export default {
         this.isColorsReady = true
       }
     },
-    init() {
+    init () {
       if (!this.colorThief) {
         this.colorThief = new ColorThief()
       }
@@ -96,10 +96,10 @@ export default {
         this.swiper = new Swiper(this.$refs.swiperContainer, swiperConfig)
       }
     },
-    destroy() {
+    destroy () {
       this.colorThief = this.swiper = null
     },
-    setColor(index) {
+    setColor (index) {
       const rgb = this.colors[index % this.colors.length]
         ?.map((c) => c * 0.6)
         .join(',')
