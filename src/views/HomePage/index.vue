@@ -80,6 +80,7 @@ export default {
         type: 'video/mp4',
       },
       prevActiveIndex: 0,
+      videoPlayTimer: null,
     }
   },
   mounted () {
@@ -141,13 +142,19 @@ export default {
       this.swiper.on('slideChangeTransitionEnd', () => {
         this.prevActiveIndex = this.swiper.activeIndex % this.videoInfos.length
         const video = this.$refs.videos[this.prevActiveIndex]
-        video.$play()
+        this.setVideoTimer(video.$play)
       })
 
       // init for first time
       if (this.prevActiveIndex === 0) {
-        this.$refs.videos[this.prevActiveIndex].$play()
+        this.setVideoTimer(this.$refs.videos[this.prevActiveIndex].$play)
       }
+    },
+    setVideoTimer (handler) {
+      clearTimeout(this.videoPlayTimer)
+      this.videoPlayTimer = setTimeout(() => {
+        handler.call(this)
+      }, 2000)
     }
   },
 }
