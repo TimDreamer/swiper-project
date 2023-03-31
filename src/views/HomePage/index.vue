@@ -2,8 +2,16 @@
   <div class="home" :style="{ backgroundColor: currentColor }">
     <div :class="SWIPER_CONTAINER" ref="swiperContainer">
       <div class="swiper-wrapper">
-        <div class="swiper-slide" v-for="(src, index) in imgsSrc" :key="src">
-          <img ref="imgs" :src="src" @load="loadImage(index)" />
+        <div
+          class="swiper-slide"
+          v-for="(info, index) in videoInfos"
+          :key="index"
+        >
+          <stream-video
+            ref="videos"
+            :video-info="info"
+            @image-load="loadImage(index)"
+          />
         </div>
       </div>
       <div class="swiper-pagination"></div>
@@ -15,6 +23,8 @@
 import ColorThief from 'colorthief'
 import Swiper from 'swiper/swiper-bundle'
 import 'swiper/swiper-bundle.css'
+import streamVideo from '@/components/streamVideo.vue'
+import VIDEO_SRC from '@/assets/videos/girl.mp4'
 
 const loadImgs = require.context('@/assets/imgs', true, /.*.jpg$/)
 const imgsSrc = loadImgs.keys().map((filename) => {
@@ -49,15 +59,27 @@ const swiperConfig = {
 }
 
 export default {
+  components: { streamVideo },
   name: 'HomePage',
   data () {
     return {
-      imgsSrc,
+      videoInfos: imgsSrc.map(img => {
+        return {
+          cover: img,
+          url: VIDEO_SRC,
+          type: 'video/mp4',
+        }
+      }),
       SWIPER_CONTAINER,
       colors: Array.from({ length: imgsSrc.length }),
       swiper: null,
       isColorsReady: false,
       currentColor: 'rgb(0,0,0)',
+      videoInfo: {
+        url: VIDEO_SRC,
+        type: 'video/mp4',
+      },
+      prevActiveIndex: 0,
     }
   },
   mounted () {
@@ -79,7 +101,7 @@ export default {
   },
   methods: {
     loadImage (index) {
-      this.colors[index] = this.colorThief.getColor(this.$refs.imgs[index])
+      this.colors[index] = this.colorThief.getColor(this.$refs.videos[index].$el.firstChild)
       if (index % this.colors.length === 0) {
         this.setColor(0)
       }
@@ -94,6 +116,7 @@ export default {
 
       if (!this.swiper) {
         this.swiper = new Swiper(this.$refs.swiperContainer, swiperConfig)
+        this.registerEvents()
       }
     },
     destroy () {
@@ -105,6 +128,27 @@ export default {
         .join(',')
       this.currentColor = `rgb(${rgb})`
     },
+    registerEvents () {
+      if (!this.swiper) {
+        return
+      }
+
+      this.swiper.on('slideChangeTransitionStart', () => {
+        const video = this.$refs.videos[this.prevActiveIndex]
+        video.$pause()
+      })
+
+      this.swiper.on('slideChangeTransitionEnd', () => {
+        this.prevActiveIndex = this.swiper.activeIndex % this.videoInfos.length
+        const video = this.$refs.videos[this.prevActiveIndex]
+        video.$play()
+      })
+
+      // init for first time
+      if (this.prevActiveIndex === 0) {
+        this.$refs.videos[this.prevActiveIndex].$play()
+      }
+    }
   },
 }
 </script>

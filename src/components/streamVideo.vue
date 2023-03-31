@@ -3,29 +3,28 @@
     <img
       class="streamVideo-cover"
       alt="cover"
-      :class="{ active: loaded }"
+      :class="{ active: loaded && shouldPlay }"
       :src="videoInfo.cover"
+      @load="$emit('image-load')"
     />
     <video
       ref="video"
       class="streamVideo-video"
-      :src="useNativeHLS && videoInfo.url"
-      preload="none"
-      type="application/x-mpegURL"
       muted
       @loadedmetadata="loaded = true"
-    />
+    >
+      <source :src="useNativeHLS || videoInfo.url" :type="videoInfo.type" />
+    </video>
   </div>
 </template>
 
 <script>
-import HLS from 'hls.js'
-
 export default {
   name: 'StreamVideo',
   data () {
     return {
       loaded: false,
+      shouldPlay: false,
       useNativeHLS: false,
     }
   },
@@ -35,42 +34,30 @@ export default {
       required: true,
     }
   },
-  created () {
-    this.initHLS()
-  },
-  destroyed () {
-    this.hls && this.hls.destroyed()
-  },
   methods: {
-    initHLS () {
-      if (this.useNativeHLS || this.hls) {
-        return
-      }
-
-      if ((this.useNativeHLS = !HLS.isSupported())) {
-        return
-      }
-
-      this.hls = new HLS()
-      this.hls.loadSource(this.videoInfo.url)
-      this.hls.attachMedia(this.$refs.video)
-
+    $play () {
+      this.shouldPlay = true
+      this.$refs.video.play()
     },
+    $pause () {
+      this.$refs.video.pause()
+      this.shouldPlay = false
+    }
   }
 }
 </script>
 
 <style lang="sass">
 .streamVideo
-  position:
+  position: relative
   &-cover
     width: 100%
     height: 100%
     object-fit: cover
     display: block
+    transition: opacity 1s ease-in-out 350ms
     &.active
       opacity: 0
-      transition: opacity 1s ease-in-out 700ms
   &-video
     position: absolute
     left: 0
