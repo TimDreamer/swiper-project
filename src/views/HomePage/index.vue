@@ -175,6 +175,7 @@ body
   display: flex
   justify-content: center
   align-items: center
+  transition: background-color 0.3s ease 0s
 
 .swiper
   &-container
